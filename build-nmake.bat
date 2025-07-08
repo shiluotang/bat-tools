@@ -5,7 +5,7 @@ set batdir=%~dp0
 set curdir=%CD%
 
 set generator="NMake Makefiles"
-set makeprg=jom
+set makeprg=nmake
 set builddir=%curdir%\build
 set dllsfile=%builddir%\dlls.list
 set lasttestlog=%builddir%\lasttestlog
@@ -68,14 +68,18 @@ goto :return
 
 :do_test
 REM echo do testing
-pushd %builddir% >NUL
-dir /b /s *.dll > %dllsfile% 2>NUL
-for /f %%a in (%dllsfile%) do (
-    xcopy /Y %%a .\
+if not exist %curdir%\CMakeLists.txt goto :return
+if not exist %builddir%\CMakeCache.txt goto :return
+if exist %builddir%\CMakeCache.txt (
+    pushd %builddir% >NUL
+    dir /b /s ..\*.dll > %dllsfile% 2>NUL
+    for /f %%a in (%dllsfile%) do (
+        xcopy /Y %%a .\tests\ >NUL 2>NUL
+    )
+    ctest --output-on-failure
+    del /s /q %dllsfile% >NUL
+    popd >NUL
 )
-ctest --output-on-failure
-del /s /q %dllsfile% >NUL
-popd >NUL
 goto :return
 
 :do_clean
