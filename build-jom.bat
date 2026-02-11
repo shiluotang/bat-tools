@@ -23,15 +23,11 @@ if "x%1" EQU "x" (
 )
 
 :loop_commands
-if "x%1" EQU "xclean" (
-    call :do_clean
-) else if "x%1" EQU "xpurge" (
+if "x%1" EQU "xpurge" (
     call :do_purge
 ) else if "x%1" EQU "xbuild" (
     call :do_compile
 ) else if "x%1" EQU "xcompile" (
-    call :do_compile
-) else if "x%1" EQU "xall" (
     call :do_compile
 ) else if "x%1" EQU "xrebuild" (
     call :do_clean
@@ -43,6 +39,8 @@ if "x%1" EQU "xclean" (
     call :do_test
 ) else if "x%1" EQU "x" (
     exit /b 0
+) else (
+    call :do_command %1
 )
 shift
 goto loop_commands
@@ -82,12 +80,13 @@ if exist %builddir%\CMakeCache.txt (
 )
 goto :return
 
-:do_clean
-REM echo do cleaning
-if exist %builddir% (
-    pushd %builddir%
-    %makeprg% clean
-)
+:do_command
+REM echo do command
+if not exist %curdir%\CMakeLists.txt goto :return
+if not exist %builddir%\CMakeCache.txt goto :return
+pushd %builddir% >NUL
+%makeprg% %1
+popd >NUL
 goto :return
 
 :do_purge
